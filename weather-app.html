@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Weather App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(to right, #00b4db, #0083b0);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+        
+        h1 {
+            margin-bottom: 1rem;
+            color: #0083b0;
+        }
+        
+        .search {
+            display: flex;
+            margin-bottom: 2rem;
+        }
+        
+        input {
+            flex: 1;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px 0 0 5px;
+            outline: none;
+            font-size: 1rem;
+        }
+        
+        button {
+            padding: 0.8rem 1.5rem;
+            background-color: #0083b0;
+            color: white;
+            border: none;
+            border-radius: 0 5px 5px 0;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #006a8e;
+        }
+        
+        .weather-info {
+            display: none;
+        }
+        
+        .weather-info.active {
+            display: block;
+        }
+        
+        .city {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .temp {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            font-weight: bold;
+        }
+        
+        .description {
+            font-size: 1.2rem;
+            margin-bottom: 1.5rem;
+            text-transform: capitalize;
+        }
+        
+        .details {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+        }
+        
+        .details div {
+            flex: 1;
+        }
+        
+        .error-message {
+            color: #e74c3c;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .loader {
+            display: none;
+            width: 48px;
+            height: 48px;
+            border: 5px solid #ddd;
+            border-radius: 50%;
+            border-top-color: #0083b0;
+            animation: spin 1s linear infinite;
+            margin: 2rem auto;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Weather App</h1>
+        <div class="search">
+            <input type="text" placeholder="Enter city name" id="city-input">
+            <button id="search-btn">Search</button>
+        </div>
+        
+        <div class="loader" id="loader"></div>
+        
+        <div class="error-message" id="error-message">
+            City not found. Please try again.
+        </div>
+        
+        <div class="weather-info" id="weather-info">
+            <div class="city" id="city">New York, US</div>
+            <div class="temp" id="temp">20°C</div>
+            <div class="description" id="description">Clear sky</div>
+            <div class="details">
+                <div>
+                    <div id="humidity">50%</div>
+                    <div>Humidity</div>
+                </div>
+                <div>
+                    <div id="wind">5 km/h</div>
+                    <div>Wind Speed</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const apiKey = ""; // OpenWeatherMap API key
+        const cityInput = document.getElementById("city-input");
+        const searchBtn = document.getElementById("search-btn");
+        const weatherInfo = document.getElementById("weather-info");
+        const cityElement = document.getElementById("city");
+        const tempElement = document.getElementById("temp");
+        const descriptionElement = document.getElementById("description");
+        const humidityElement = document.getElementById("humidity");
+        const windElement = document.getElementById("wind");
+        const errorMessage = document.getElementById("error-message");
+        const loader = document.getElementById("loader");
+
+        searchBtn.addEventListener("click", fetchWeather);
+        cityInput.addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                fetchWeather();
+            }
+        });
+
+        function fetchWeather() {
+            const cityName = cityInput.value.trim();
+            
+            if (!cityName) return;
+            
+            // Show loader and hide previous results
+            loader.style.display = "block";
+            weatherInfo.classList.remove("active");
+            errorMessage.style.display = "none";
+            
+            fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&units=metric&appid=${apiKey}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("City not found");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    displayWeather(data);
+                    loader.style.display = "none";
+                    weatherInfo.classList.add("active");
+                })
+                .catch(error => {
+                    console.error("Error:", error);
+                    loader.style.display = "none";
+                    errorMessage.style.display = "block";
+                });
+        }
+
+        function displayWeather(data) {
+            cityElement.textContent = `${data.name}, ${data.sys.country}`;
+            tempElement.textContent = `${Math.round(data.main.temp)}°C`;
+            descriptionElement.textContent = data.weather[0].description;
+            humidityElement.textContent = `${data.main.humidity}%`;
+            windElement.textContent = `${data.wind.speed} km/h`;
+        }
+
+    </script>
+</body>
+</html>
